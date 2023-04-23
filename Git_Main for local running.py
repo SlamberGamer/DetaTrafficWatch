@@ -11,11 +11,11 @@ def count_data_in_column(csv_file_name, column_name):
         return len(df[column_name]) - 1
 
 # Initialize Google Maps API client with the provided API key
-gmaps = googlemaps.Client(key='YOUR_API_KEY')
+gmaps = googlemaps.Client(key='PUT_IN_YOUR_API')
 
 # Set origin and destination coordinates
-origin = 'ORIGIN_PLACE'
-destination = 'DESTINATION_PLACE'
+origin = 'PUT_IN_YOUR_LOCATION' #EG: 'F962+5P Arau, Perlis' OR '6.460621086195773, 100.35181053780218'
+destination = 'PUT_IN_YOUR_LOCATION' #EG: 'F962+5P Arau, Perlis' OR '6.460621086195773, 100.35181053780218'
 
 # Set the number of API calls and the interval between calls
 num_calls = 1
@@ -35,51 +35,60 @@ if not os.path.isfile(file_name):
         writer.writeheader()
 
 # Loop through the desired number of API calls
-for i in range(num_calls):
-    try:
-        # Call the Google Maps API to get distance and duration between the origin and destination
-        origin_destination = gmaps.distance_matrix(origin, destination)
-        destination_origin = gmaps.distance_matrix(destination, origin)
+# for i in range(num_calls):
+try:
+    # Call the Google Maps API to get distance and duration between the origin and destination
+    origin_destination = gmaps.distance_matrix(origin, destination,
+                                               traffic_model='best_guess',
+                                               departure_time='now')
 
-        # Add the results to the results list
-        results.append({
-            'timestamp': datetime.now(),
-            'Distance Origin to Destination': origin_destination['rows'][0]['elements'][0]['distance']['text'],
-            'Distance Destination to Origin': destination_origin['rows'][0]['elements'][0]['distance']['text'],
-            'Origin to Destination (Hours)': origin_destination['rows'][0]['elements'][0]['duration']['text'],
-            'Origin to Destination (Seconds)': origin_destination['rows'][0]['elements'][0]['duration']['value'],
-            'Destination to Origin (Hours)': destination_origin['rows'][0]['elements'][0]['duration']['text'],
-            'Destination to Origin (Seconds)': destination_origin['rows'][0]['elements'][0]['duration']['value']
-        })
+    print(origin_destination)
 
-        now = datetime.now()
-        date = now.date().strftime('%Y-%m-%d')
-        time = now.time().strftime('%H:%M:%S')
+    destination_origin = gmaps.distance_matrix(destination, origin,
+                                               traffic_model='best_guess',
+                                               departure_time='now')
 
-        # Append the results to the output CSV file
-        with open(file_name, mode='a', newline='', encoding='utf-8', errors='ignore') as csv_file:
-            writer = csv.writer(csv_file)
-            writer.writerow([date,
-                             time,
-                             origin_destination['rows'][0]['elements'][0]['distance']['text'],
-                             destination_origin['rows'][0]['elements'][0]['distance']['text'],
-                             origin_destination['rows'][0]['elements'][0]['duration']['text'],
-                             origin_destination['rows'][0]['elements'][0]['duration']['value'],
-                             destination_origin['rows'][0]['elements'][0]['duration']['text'],
-                             destination_origin['rows'][0]['elements'][0]['duration']['value']])
-            csv_file.flush()
+    print(destination_origin)
 
-        # Display the row count for each loop iteration
-        column_to_count = 'Distance Origin to Destination'
-        count = count_data_in_column(file_name, column_to_count)
-        print(f'Total Data Collected . . . {count}')
+    # Add the results to the results list
+    results.append({
+        'timestamp': datetime.now(),
+        'Distance Origin to Destination': origin_destination['rows'][0]['elements'][0]['distance']['text'],
+        'Distance Destination to Origin': destination_origin['rows'][0]['elements'][0]['distance']['text'],
+        'Origin to Destination (Hours)': origin_destination['rows'][0]['elements'][0]['duration_in_traffic']['text'],
+        'Origin to Destination (Seconds)': origin_destination['rows'][0]['elements'][0]['duration_in_traffic']['value'],
+        'Destination to Origin (Hours)': destination_origin['rows'][0]['elements'][0]['duration_in_traffic']['text'],
+        'Destination to Origin (Seconds)': destination_origin['rows'][0]['elements'][0]['duration_in_traffic']['value']
+    })
 
-        # Wait for the specified interval before the next API call
-        # import time
-        # time.sleep(interval)
+    now = datetime.now()
+    date = now.date().strftime('%Y-%m-%d')
+    time = now.time().strftime('%H:%M:%S')
 
-    except:
-        pass
+    # Append the results to the output CSV file
+    with open(file_name, mode='a', newline='', encoding='utf-8', errors='ignore') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow([date,
+                         time,
+                         origin_destination['rows'][0]['elements'][0]['distance']['text'],
+                         destination_origin['rows'][0]['elements'][0]['distance']['text'],
+                         origin_destination['rows'][0]['elements'][0]['duration_in_traffic']['text'],
+                         origin_destination['rows'][0]['elements'][0]['duration_in_traffic']['value'],
+                         destination_origin['rows'][0]['elements'][0]['duration_in_traffic']['text'],
+                         destination_origin['rows'][0]['elements'][0]['duration_in_traffic']['value']])
+        csv_file.flush()
 
-    # time.sleep(100)
+    # Display the row count for each loop iteration
+    column_to_count = 'Distance Origin to Destination'
+    count = count_data_in_column(file_name, column_to_count)
+    print(f'Total Data Collected . . . {count}')
+
+    # Wait for the specified interval before the next API call
+    # import time
+    # time.sleep(interval)
+
+except:
     pass
+
+# time.sleep(100)
+pass
